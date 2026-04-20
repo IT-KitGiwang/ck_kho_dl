@@ -1,6 +1,6 @@
 # 📘 BỘ TỪ ĐIỂN CÔNG THỨC DATA CLEANSING TRÊN SSIS (DERIVED COLUMN EXPRESSIONS)
 
-Tài liệu này tổng hợp **toàn bộ mã code (Expressions) chuẩn nhất** để dán vào cục **Derived Column** trong SSIS cho tất cả 6 bảng theo đúng yêu cầu từ `bao_cao_lam_sach_du_lieu.md`.
+Tài liệu này tổng hợp **toàn bộ mã code (Expressions) chuẩn nhất** để dán vào cục **Derived Column** trong SSIS cho tất cả 7 bảng (5 DIM + 2 FACT) theo đúng yêu cầu từ `bao_cao_lam_sach_du_lieu.md`.
 Bạn chỉ cần mở tài liệu này, Copy mã Expression ở cột phải, và Paste thẳng vào ô gõ công thức trên SSIS là tỉ lệ lỗi bằng 0%.
 
 ---
@@ -14,6 +14,8 @@ Bạn chỉ cần mở tài liệu này, Copy mã Expression ở cột phải, v
 | `clean_subcategory` | `TRIM([SUBCAT])` |
 
 *(Cột `MAINTENANCE` bạn có thể map thẳng vào SQL vì nó đã sạch sẵn).*
+
+⚠️ **LƯU Ý:** Cột `ID` trong CSV sẽ trở thành `category_key` trong DIM_CATEGORY. Giá trị dùng dấu gạch dưới `_` (vd: `AC_BR`). Khi Lookup từ DIM_PRODUCT, `cat_id` dùng dấu `-` nên cần `REPLACE('_', '-')` trong Lookup Connection.
 
 ---
 
@@ -65,6 +67,8 @@ Bạn chỉ cần mở tài liệu này, Copy mã Expression ở cột phải, v
 | `clean_prd_line` | `TRIM([prd_line]) == "M" ? "Mountain" : (TRIM([prd_line]) == "R" ? "Road" : (TRIM([prd_line]) == "T" ? "Touring" : (TRIM([prd_line]) == "S" ? "Other Sales" : "n/a")))` |
 | `cat_id` | `SUBSTRING([prd_key], 1, FINDSTRING([prd_key], "-", 1) + FINDSTRING(SUBSTRING([prd_key], FINDSTRING([prd_key], "-", 1) + 1, LEN([prd_key])), "-", 1) - 1)` |
 | `clean_prd_key` | `SUBSTRING([prd_key], FINDSTRING([prd_key], "-", 1) + FINDSTRING(SUBSTRING([prd_key], FINDSTRING([prd_key], "-", 1) + 1, LEN([prd_key])), "-", 1) + 1, LEN([prd_key]))` |
+
+⚠️ **QUAN TRỌNG — Lookup Category:** Khi cấu hình Lookup `cat_id` → `DIM_CATEGORY.category_key`, phải chọn **"Use results of an SQL query"** với câu SQL: `SELECT category_id, REPLACE(category_key, '_', '-') AS category_key FROM gold.DIM_CATEGORY` — vì `cat_id` = `AC-HE` (dấu `-`) còn `category_key` = `AC_HE` (dấu `_`).
 
 ---
 
