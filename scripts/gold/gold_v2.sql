@@ -115,9 +115,10 @@ GO
 -- ────────────────────────────────────────────────────────────
 CREATE TABLE gold.DIM_CATEGORY (
     category_id         INT             NOT NULL IDENTITY(1,1),
-    category            NVARCHAR(100)   NOT NULL,       -- Accessories, Bikes, Clothing, Components
-    subcategory         NVARCHAR(100)   NOT NULL,       -- Helmets, Mountain Bikes, Jerseys, etc.
-    maintenance_flag    NVARCHAR(3)     NOT NULL,       -- Yes / No
+    category            NVARCHAR(200)   NOT NULL,       -- Accessories, Bikes, Clothing, Components
+    subcategory         NVARCHAR(200)   NOT NULL,       -- Helmets, Mountain Bikes, Jerseys, etc.
+    maintenance_flag    NVARCHAR(50)    NOT NULL,       -- Yes / No
+    category_key        NVARCHAR(50)    NULL,           -- Business key from source (e.g. AC_BR)
     CONSTRAINT PK_DIM_CATEGORY PRIMARY KEY (category_id)
 );
 GO
