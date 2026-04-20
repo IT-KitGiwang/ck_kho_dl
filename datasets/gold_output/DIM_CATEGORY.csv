@@ -1,0 +1,41 @@
+category_id,category,subcategory,maintenance_flag,category_key
+-----------,--------,-----------,----------------,------------
+1,Accessories,Bike Racks,Yes,AC_BR
+2,Accessories,Bike Stands,No,AC_BS
+3,Accessories,Bottles and Cages,No,AC_BC
+4,Accessories,Cleaners,Yes,AC_CL
+5,Accessories,Fenders,No,AC_FE
+6,Accessories,Helmets,Yes,AC_HE
+7,Accessories,Hydration Packs,No,AC_HP
+8,Accessories,Lights,Yes,AC_LI
+9,Accessories,Locks,Yes,AC_LO
+10,Accessories,Panniers,No,AC_PA
+11,Accessories,Pumps,Yes,AC_PU
+12,Accessories,Tires and Tubes,Yes,AC_TT
+13,Bikes,Mountain Bikes,Yes,BI_MB
+14,Bikes,Road Bikes,Yes,BI_RB
+15,Bikes,Touring Bikes,Yes,BI_TB
+16,Clothing,Bib-Shorts,No,CL_BS
+17,Clothing,Caps,No,CL_CA
+18,Clothing,Gloves,No,CL_GL
+19,Clothing,Jerseys,No,CL_JE
+20,Clothing,Shorts,No,CL_SH
+21,Clothing,Socks,No,CL_SO
+22,Clothing,Tights,No,CL_TI
+23,Clothing,Vests,No,CL_VE
+24,Components,Bottom Brackets,Yes,CO_BB
+25,Components,Brakes,Yes,CO_BR
+26,Components,Chains,Yes,CO_CH
+27,Components,Cranksets,Yes,CO_CS
+28,Components,Derailleurs,Yes,CO_DE
+29,Components,Forks,Yes,CO_FO
+30,Components,Handlebars,No,CO_HB
+31,Components,Headsets,No,CO_HS
+32,Components,Mountain Frames,Yes,CO_MF
+33,Components,Pedals,No,CO_PD
+34,Components,Road Frames,Yes,CO_RF
+35,Components,Saddles,No,CO_SA
+36,Components,Touring Frames,Yes,CO_TF
+37,Components,Wheels,Yes,CO_WH
+
+(37 rows affected)

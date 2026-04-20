@@ -1,0 +1,11 @@
+location_id,country,region
+-----------,-------,------
+1,,Pacific
+2,Australia,Pacific
+3,Canada,North America
+4,France,Europe
+5,Germany,Europe
+6,United Kingdom,Europe
+7,United States,North America
+
+(7 rows affected)
