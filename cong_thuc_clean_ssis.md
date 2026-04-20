@@ -68,13 +68,38 @@ Bạn chỉ cần mở tài liệu này, Copy mã Expression ở cột phải, v
 
 ---
 
-## 6. NẠP FACT_SALES (Nguồn: `sales_details.csv`)
+## 6. NẠP FACT_PRODUCT_PRICE (Nguồn: `prd_info.csv`)
+*Nhiệm vụ: Trích lịch sử giá sản phẩm (SCD Type 2), xử lý NULL cost và end_date.*
+
+⚙️ **TRIỂN KHAI: Execute SQL Task** (BULK INSERT + SQL CASE WHEN)
+
+| Kỹ thuật làm sạch | SQL tương đương |
+| :--- | :--- |
+| Xử lý cost NULL/rỗng | `CASE WHEN LTRIM(RTRIM(ISNULL(prd_cost,''))) = '' THEN NULL ELSE CAST(prd_cost AS DECIMAL(18,2)) END` |
+| Xử lý end_date NULL → is_current | `CASE WHEN end_date rỗng THEN 1 ELSE 0 END` |
+| Trích product_key (bỏ prefix) | `SUBSTRING(prd_key, sau dấu '-' thứ 2, LEN(prd_key))` |
+| Lọc dòng start_date rỗng | `WHERE LTRIM(RTRIM(ISNULL(prd_start_dt,''))) != ''` |
+
+---
+
+## 7. NẠP FACT_SALES (Nguồn: `sales_details.csv`)
 *Nhiệm vụ: Sửa sai số và khôi phục giá Sales / Price theo chuẩn công thức toán học (`Quantity * Price = Sales`).*
 
 💡 **LỜI KHUYÊN KIẾN TRÚC:** 
 Bảng Fact chứa logic xử lý các Ngày (Date bị độ dài khác 8 hoặc bằng 0). SSIS Expression xử lý Date String lỗi sang kiểu DateTime rất hay báo lỗi đỏ cả luồng. Tốt nhất ở bảng Fact_Sales này bạn **KHÔNG NÊN** dùng Derived Column, mà hãy nạp thẳng CSV vào bảng tạm (`stg_sales`) ròi dùng `CASE WHEN` SQL sửa nó.
 
-Tuy nhiên, nếu bạn vẫn muốn dùng SSIS Derived Column ép dẻo để Sửa Giá/Sửa Doanh Thu, đây là công thức:
+⚙️ **TRIỂN KHAI: Execute SQL Task** (BULK INSERT + SQL CASE WHEN)
+
+| Kỹ thuật làm sạch | SQL tương đương |
+| :--- | :--- |
+| TRIM order_num, prd_key | `LTRIM(RTRIM(sls_ord_num))` |
+| Sửa sales (qty × price = sales) | `CASE WHEN sales <= 0 OR sales != qty * ABS(price) THEN qty * ABS(price) ELSE sales END` |
+| Sửa price (price <= 0) | `CASE WHEN price <= 0 THEN sales / NULLIF(qty, 0) ELSE ABS(price) END` |
+| Lọc date lỗi (độ dài ≠ 8) | `WHERE LEN(LTRIM(RTRIM(sls_order_dt))) = 8` |
+| Tính days_to_ship | `DATEDIFF(DAY, order_date, ship_date)` |
+| Tính days_to_due | `DATEDIFF(DAY, order_date, due_date)` |
+
+Nếu bạn vẫn muốn dùng SSIS Derived Column ép dẻo để Sửa Giá/Sửa Doanh Thu, đây là công thức:
 
 | Tên cột đặt mới | Công thức SSIS (Expression) để Copy |
 | :--- | :--- |
