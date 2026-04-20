@@ -1,0 +1,28 @@
+Msg 4864, Level 16, State 1, Server DESKTOP-ABT6G2B, Line 1
+Bulk load data conversion error (type mismatch or invalid character for the specified codepage) for row 120, column 3 (dummy).
+Msg 4864, Level 16, State 1, Server DESKTOP-ABT6G2B, Line 1
+Bulk load data conversion error (type mismatch or invalid character for the specified codepage) for row 121, column 3 (dummy).
+Msg 4864, Level 16, State 1, Server DESKTOP-ABT6G2B, Line 1
+Bulk load data conversion error (type mismatch or invalid character for the specified codepage) for row 123, column 3 (dummy).
+Msg 4864, Level 16, State 1, Server DESKTOP-ABT6G2B, Line 1
+Bulk load data conversion error (type mismatch or invalid character for the specified codepage) for row 126, column 3 (dummy).
+Msg 4864, Level 16, State 1, Server DESKTOP-ABT6G2B, Line 1
+Bulk load data conversion error (type mismatch or invalid character for the specified codepage) for row 168, column 3 (dummy).
+Msg 4864, Level 16, State 1, Server DESKTOP-ABT6G2B, Line 1
+Bulk load data conversion error (type mismatch or invalid character for the specified codepage) for row 173, column 3 (dummy).
+Msg 4864, Level 16, State 1, Server DESKTOP-ABT6G2B, Line 1
+Bulk load data conversion error (type mismatch or invalid character for the specified codepage) for row 176, column 3 (dummy).
+Msg 4864, Level 16, State 1, Server DESKTOP-ABT6G2B, Line 1
+Bulk load data conversion error (type mismatch or invalid character for the specified codepage) for row 189, column 3 (dummy).
+Msg 4864, Level 16, State 1, Server DESKTOP-ABT6G2B, Line 1
+Bulk load data conversion error (type mismatch or invalid character for the specified codepage) for row 195, column 3 (dummy).
+Msg 4864, Level 16, State 1, Server DESKTOP-ABT6G2B, Line 1
+Bulk load data conversion error (type mismatch or invalid character for the specified codepage) for row 198, column 3 (dummy).
+Msg 4864, Level 16, State 1, Server DESKTOP-ABT6G2B, Line 1
+Bulk load data conversion error (type mismatch or invalid character for the specified codepage) for row 200, column 3 (dummy).
+Msg 4865, Level 16, State 1, Server DESKTOP-ABT6G2B, Line 1
+Cannot bulk load because the maximum number of errors (10) was exceeded.
+Msg 7399, Level 16, State 1, Server DESKTOP-ABT6G2B, Line 1
+The OLE DB provider "BULK" for linked server "(null)" reported an error. The provider did not give any information about the error.
+Msg 7330, Level 16, State 2, Server DESKTOP-ABT6G2B, Line 1
+Cannot fetch a row from OLE DB provider "BULK" for linked server "(null)".
