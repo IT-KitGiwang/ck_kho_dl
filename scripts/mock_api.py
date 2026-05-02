@@ -33,7 +33,7 @@ class SimpleAPIHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(data).encode('utf-8'))
 
 if __name__ == '__main__':
-    port = 8080
+    port = 8099
     server = HTTPServer(('localhost', port), SimpleAPIHandler)
     print(f"[OK] Mock API for Logistics Location is running!")
     print(f"URL: http://localhost:{port}/")

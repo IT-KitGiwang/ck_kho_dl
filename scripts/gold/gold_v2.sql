@@ -1,28 +1,34 @@
 /*
 ===============================================================================
-  DATA WAREHOUSE - CREATE TABLES & RELATIONSHIPS (v2)
+  DATA WAREHOUSE - CREATE TABLES & RELATIONSHIPS (v3)
   Project : SQL Data Warehouse - Kho dữ liệu cuối kỳ
   Model   : Snowflake Schema
-  Tables  : 2 Fact Tables + 5 Dimension Tables
+  Tables  : 2 Fact Tables + 6 Dimension Tables
   Created : 2026-04-19
-  Updated : 2026-04-19 (v2 — post peer-review)
+  Updated : 2026-05-01 (v3 — is_current → DIM_PRICE_STATUS)
 
   v2 Changes:
     + FACT_SALES.unit_cost      — Snapshot giá vốn tại thời điểm bán
     + FACT_SALES.days_to_ship   — Pre-calculated: ngày đặt → ngày giao
     + FACT_SALES.days_to_due    — Pre-calculated: ngày đặt → ngày đến hạn
+
+  v3 Changes:
+    + DIM_PRICE_STATUS          — Tách is_current ra thành bảng Dimension
+    ~ FACT_PRODUCT_PRICE        — Thay is_current BIT bằng FK price_status_id
 ===============================================================================
 
-  ARCHITECTURE:
-  
+  ARCHITECTURE (Snowflake Schema):
+
   DIM_CATEGORY ←── DIM_PRODUCT ←── FACT_SALES ──→ DIM_CUSTOMER
                         ↑              │  │  │
                         │              │  │  │
                FACT_PRODUCT_PRICE      │  │  └──→ DIM_LOCATION
-                   │       │           │  │
-                   ↓       ↓           ↓  ↓
-                  DIM_TIME (Role-Playing: order_date, ship_date, due_date,
-                            start_date, end_date)
+                   │  │    │           │  │
+                   │  │    ↓           ↓  ↓
+                   │  │  DIM_TIME (Role-Playing: order_date, ship_date,
+                   │  │             due_date, start_date, end_date)
+                   │  ↓
+                   └──→ DIM_PRICE_STATUS (Current / Historical)
 ===============================================================================
 */
 
@@ -62,6 +68,10 @@ IF OBJECT_ID('gold.FACT_PRODUCT_PRICE', 'U') IS NOT NULL
 GO
 
 -- Drop Dimensions (child before parent)
+IF OBJECT_ID('gold.DIM_PRICE_STATUS', 'U') IS NOT NULL
+    DROP TABLE gold.DIM_PRICE_STATUS;
+GO
+
 IF OBJECT_ID('gold.DIM_PRODUCT', 'U') IS NOT NULL
     DROP TABLE gold.DIM_PRODUCT;
 GO
@@ -158,6 +168,21 @@ GO
 
 
 -- ────────────────────────────────────────────────────────────
+-- DIM_PRICE_STATUS  ★ v3 NEW
+-- Purpose: Thay thế cột is_current (BIT) trong FACT_PRODUCT_PRICE
+-- Chuyển cờ boolean thành Dimension đúng chuẩn Kimball
+-- Referenced by: FACT_PRODUCT_PRICE.price_status_id
+-- ────────────────────────────────────────────────────────────
+CREATE TABLE gold.DIM_PRICE_STATUS (
+    price_status_id     INT             NOT NULL,       -- PK: 1 = Current, 0 = Historical
+    status_label        NVARCHAR(20)    NOT NULL,       -- 'Current' / 'Historical'
+    status_description  NVARCHAR(200)   NULL,           -- Mô tả chi tiết
+    CONSTRAINT PK_DIM_PRICE_STATUS PRIMARY KEY (price_status_id)
+);
+GO
+
+
+-- ────────────────────────────────────────────────────────────
 -- DIM_PRODUCT
 -- Source: CRM prd_info.csv (latest version per product_key)
 -- Referenced by: FACT_SALES.product_id
@@ -225,17 +250,18 @@ GO
 
 
 -- ────────────────────────────────────────────────────────────
--- FACT_PRODUCT_PRICE (Periodic Snapshot Fact Table)
+-- FACT_PRODUCT_PRICE (Periodic Snapshot Fact Table) — v3
 -- Source: CRM prd_info.csv (cost history)
 -- Grain: 1 row = 1 product cost for 1 time period
+-- v3: is_current BIT → price_status_id FK (DIM_PRICE_STATUS)
 -- ────────────────────────────────────────────────────────────
 CREATE TABLE gold.FACT_PRODUCT_PRICE (
     product_price_id    INT             NOT NULL IDENTITY(1,1),
     product_id          INT             NOT NULL,       -- FK → DIM_PRODUCT
     start_date_id       INT             NOT NULL,       -- FK → DIM_TIME
     end_date_id         INT             NULL,           -- FK → DIM_TIME (NULL = current)
+    price_status_id     INT             NOT NULL DEFAULT 0,  -- ★ v3: FK → DIM_PRICE_STATUS
     cost                DECIMAL(18,2)   NULL,           -- Measure (some old records have NULL cost)
-    is_current          BIT             NOT NULL DEFAULT 0,  -- 1 = current, 0 = history
 
     CONSTRAINT PK_FACT_PRODUCT_PRICE PRIMARY KEY (product_price_id),
 
@@ -246,7 +272,10 @@ CREATE TABLE gold.FACT_PRODUCT_PRICE (
         REFERENCES gold.DIM_TIME (date_id),
 
     CONSTRAINT FK_PRICE_END_DATE FOREIGN KEY (end_date_id)
-        REFERENCES gold.DIM_TIME (date_id)
+        REFERENCES gold.DIM_TIME (date_id),
+
+    CONSTRAINT FK_PRICE_STATUS FOREIGN KEY (price_status_id)
+        REFERENCES gold.DIM_PRICE_STATUS (price_status_id)
 );
 GO
 
@@ -289,6 +318,19 @@ GO
 
 
 -- ============================================================
+-- STEP 4b: POPULATE DIM_PRICE_STATUS  ★ v3 NEW
+-- ============================================================
+INSERT INTO gold.DIM_PRICE_STATUS (price_status_id, status_label, status_description)
+VALUES
+    (1, N'Current',    N'Giá hiện tại đang áp dụng — end_date IS NULL'),
+    (0, N'Historical', N'Giá đã hết hạn — end_date IS NOT NULL');
+GO
+
+PRINT '>>> DIM_PRICE_STATUS populated: 2 rows';
+GO
+
+
+-- ============================================================
 -- STEP 5: CREATE INDEXES (Performance)
 -- ============================================================
 
@@ -313,9 +355,8 @@ GO
 CREATE NONCLUSTERED INDEX IX_FACT_PRICE_product
     ON gold.FACT_PRODUCT_PRICE (product_id);
 
-CREATE NONCLUSTERED INDEX IX_FACT_PRICE_current
-    ON gold.FACT_PRODUCT_PRICE (is_current)
-    WHERE is_current = 1;
+CREATE NONCLUSTERED INDEX IX_FACT_PRICE_status
+    ON gold.FACT_PRODUCT_PRICE (price_status_id);
 GO
 
 -- DIM_PRODUCT index
@@ -445,7 +486,7 @@ SELECT
 
     -- Price history
     fpp.cost,
-    fpp.is_current,
+    dps.status_label        AS price_status,        -- ★ v3: from DIM
 
     -- Time range
     dt_start.full_date      AS price_start_date,
@@ -458,6 +499,9 @@ INNER JOIN gold.DIM_PRODUCT dp
 
 INNER JOIN gold.DIM_CATEGORY dcat
     ON dp.category_id = dcat.category_id
+
+INNER JOIN gold.DIM_PRICE_STATUS dps                -- ★ v3: new join
+    ON fpp.price_status_id = dps.price_status_id
 
 INNER JOIN gold.DIM_TIME dt_start
     ON fpp.start_date_id = dt_start.date_id
@@ -588,11 +632,13 @@ ORDER BY [From Table], [FK Name];
 GO
 
 PRINT '===============================================';
-PRINT '  DATA WAREHOUSE SETUP COMPLETE (v2)';
-PRINT '  Tables  : 7 (5 Dimensions + 2 Facts)';
+PRINT '  DATA WAREHOUSE SETUP COMPLETE (v3)';
+PRINT '  Tables  : 8 (6 Dimensions + 2 Facts)';
 PRINT '  Schema  : gold';
 PRINT '  DIM_TIME: Pre-populated (2003-2030)';
+PRINT '  DIM_PRICE_STATUS: Pre-populated (2 rows)';
 PRINT '  Indexes : Created for all FK columns';
 PRINT '  v2 adds : unit_cost, days_to_ship, days_to_due';
+PRINT '  v3 adds : DIM_PRICE_STATUS (is_current → dim)';
 PRINT '===============================================';
 GO
